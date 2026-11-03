@@ -68,7 +68,7 @@
     ['2025-06-27','CB-250627-19','手冲咖啡豆','林女士',8,784,368],
     ['2025-06-29','CB-250629-20','陶瓷滤杯','陈女士',1,128,54]
   ];
-  const state = { headers: [], rawRows: [], mapping: {}, records: [], sourceName: '', pendingName: '', skipped: 0, isDemo: true };
+  const state = { headers: [], rawRows: [], mapping: {}, records: [], sourceName: '', pendingName: '', skipped: 0, isDemo: true, dateFilter: { preset: 'all', start: '', end: '' } };
 
   const money = (value, digits = 0) => value == null || !Number.isFinite(value) ? '—' : new Intl.NumberFormat(locale, { style: 'currency', currency: 'CNY', maximumFractionDigits: digits, minimumFractionDigits: digits }).format(value);
   const compactMoney = (value) => {
@@ -149,7 +149,7 @@
       const lab = document.createElement('label'); lab.htmlFor = `map-${key}`; lab.textContent = t(labelKey);
       const select = document.createElement('select'); select.id = `map-${key}`;
       const none = document.createElement('option'); none.value = ''; none.textContent = t('mappingNone'); select.append(none);
-      state.headers.forEach((header, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = header; select.append(option); });
+      state.headers.forEach((header, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = mappingHeaderLabel(header); select.append(option); });
       select.value = state.mapping[key] ?? ''; select.addEventListener('change', () => { state.mapping[key] = select.value; });
       wrap.append(lab, select); grid.append(wrap);
     });
@@ -176,6 +176,62 @@
     else date = new Date(s);
     return Number.isNaN(date.valueOf()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
+  function mappingHeaderLabel(header) {
+    const raw = String(header ?? '');
+    const labels = t('columnLabels');
+    const friendly = labels && typeof labels === 'object' ? labels[normalized(raw)] : '';
+    if (friendly) return `${friendly} · ${raw}`;
+    const headerKey = normalized(raw);
+    const field = fields.find(([, , aliasesKey]) => {
+      const aliases = ['zh-CN', 'en'].flatMap((language) => {
+        const value = catalogs[language]?.[aliasesKey];
+        return Array.isArray(value) ? value : [];
+      });
+      return aliases.some((alias) => {
+        const aliasKey = normalized(alias);
+        return headerKey === aliasKey || (aliasKey.length >= 3 && headerKey.includes(aliasKey));
+      });
+    });
+    if (!field) return raw;
+    const [, labelKey] = field;
+    return `${catalogs['zh-CN']?.[labelKey] ?? t(labelKey)} / ${catalogs.en?.[labelKey] ?? t(labelKey)} · ${raw}`;
+  }
+  function filterBounds() {
+    const filter = state.dateFilter;
+    if (filter.preset === 'custom') return { start: parseDate(filter.start), end: parseDate(filter.end) };
+    if (filter.preset === 'all') return { start: null, end: null };
+    const months = Number.parseInt(filter.preset, 10);
+    const latest = state.records.reduce((max, row) => !max || row.date > max ? row.date : max, null);
+    if (!latest || !Number.isFinite(months)) return { start: null, end: null };
+    return { start: new Date(latest.getFullYear(), latest.getMonth() - months + 1, 1), end: latest };
+  }
+  function filteredRecords() {
+    const { start, end } = filterBounds();
+    if (!start && !end) return state.records;
+    return state.records.filter((row) => (!start || row.date >= start) && (!end || row.date <= end));
+  }
+  function currentFilterSummary(rows = filteredRecords()) {
+    const { start: boundStart, end: boundEnd } = filterBounds();
+    const start = boundStart || rows.reduce((min, row) => !min || row.date < min ? row.date : min, null);
+    const end = boundEnd || rows.reduce((max, row) => !max || row.date > max ? row.date : max, null);
+    if (!start || !end) return t(state.dateFilter.preset === 'all' ? 'filterAllNoRecords' : 'filterNoRecords');
+    const dates = { start: formatDate(start), end: formatDate(end) };
+    if (state.dateFilter.preset === 'all') return t('filterSummaryAll', dates);
+    if (state.dateFilter.preset === 'custom') return t('filterSummaryCustom', dates);
+    const count = Number.parseInt(state.dateFilter.preset, 10);
+    const labelKey = count === 3 ? 'filter3Months' : count === 6 ? 'filter6Months' : 'filter12Months';
+    return t('filterSummaryPreset', { ...dates, label: t(labelKey) });
+  }
+  function renderDateFilter() {
+    document.querySelectorAll('[data-date-preset]').forEach((button) => {
+      const active = button.dataset.datePreset === state.dateFilter.preset;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    $('#filter-start').value = state.dateFilter.start || '';
+    $('#filter-end').value = state.dateFilter.end || '';
+  }
+  function skippedInCurrentView() { return state.dateFilter.preset === 'all' ? state.skipped : 0; }
   function indexFor(key) { return state.mapping[key] === '' || state.mapping[key] == null ? -1 : Number(state.mapping[key]); }
   function buildRecords() {
     const dateIndex = indexFor('date'); const revenueIndex = indexFor('revenue');
@@ -195,8 +251,8 @@
     state.records = rows; state.skipped = skipped;
   }
   function aggregate() {
-    const rows = state.records; const sales = rows.reduce((sum, row) => sum + row.revenue, 0);
-    const profitComplete = rows.every((row) => row.profit != null); const profit = profitComplete ? rows.reduce((sum, row) => sum + row.profit, 0) : null;
+    const rows = filteredRecords(); const sales = rows.reduce((sum, row) => sum + row.revenue, 0);
+    const profitComplete = rows.length > 0 && rows.every((row) => row.profit != null); const profit = profitComplete ? rows.reduce((sum, row) => sum + row.profit, 0) : null;
     const orderSet = new Set(); rows.forEach((row, i) => orderSet.add(row.orderId || `row-${i}`));
     const customers = new Set(rows.map((row) => row.customer).filter(Boolean));
     const months = new Map(); rows.forEach((row) => {
@@ -237,9 +293,10 @@
     addKpi({ label: t('kpiOrders'), value: formatCount(data.orderCount), sub: t('kpiRows', { count: formatCount(data.rows.length) }), icon: '▤', accent: 'M2 36 C13 33 18 19 27 26 S39 33 47 16 S59 18 67 7' });
     addKpi({ label: t('kpiAverage'), value: compactMoney(data.averageOrder), sub: t('kpiCustomers', { count: formatCount(data.customerCount) }), icon: '◎', accent: 'M2 39 C10 28 16 31 25 23 S38 29 47 13 S58 17 67 5' });
     const months = data.monthly;
-    $('#date-range').innerHTML = `${months.length ? t('recentMonths', { count: formatCount(months.length) }) : t('selectedPeriod')} <span>⌄</span>`;
+    $('#date-range').textContent = currentFilterSummary(data.rows);
     $('#trend-summary').innerHTML = `<strong>${escapeHTML(compactMoney(data.sales))}</strong>${escapeHTML(t('trendSummary'))}${data.profitComplete ? ` <span>·</span> ${escapeHTML(t('trendProfit'))} ${escapeHTML(compactMoney(data.profit))}` : ''}`;
-    $('#dataset-meta').textContent = t('recordsMonths', { records: formatCount(data.rows.length), skipped: state.skipped ? ` · ${t('rowSkipped', { count: formatCount(state.skipped) })}` : '', start: formatMonth(months[0]?.month || '2025-01'), end: formatMonth(months.at(-1)?.month || '2025-01') });
+    const skipped = skippedInCurrentView();
+    $('#dataset-meta').textContent = t('recordsMonths', { records: formatCount(data.rows.length), skipped: skipped ? ` · ${t('rowSkipped', { count: formatCount(skipped) })}` : '', start: formatMonth(months[0]?.month || '2025-01'), end: formatMonth(months.at(-1)?.month || '2025-01') });
   }
   function renderChart(data) {
     const wrap = $('#trend-chart'); const months = data.monthly; $('#profit-legend').hidden = !data.profitComplete;
@@ -275,11 +332,16 @@
   }
   function renderInsights(data) {
     const list = $('#insights-list'); list.replaceChildren(); const items = [];
+    if (!data.rows.length) {
+      const empty = document.createElement('div'); empty.className = 'empty-state'; empty.textContent = t('filterNoRecords'); list.append(empty);
+      return;
+    }
     if (data.outliers.length) items.push({ warning: true, icon: '↗', title: t('insightHighTitle', { count: formatCount(data.outliers.length) }), copy: t('insightHighCopy', { amount: money(data.highThreshold) }) });
     if (data.refunds.length) items.push({ warning: true, icon: '↙', title: t('insightRefundTitle', { count: formatCount(data.refunds.length) }), copy: t('insightRefundCopy') });
     if (data.monthChange != null && data.monthChange < -20) items.push({ warning: true, icon: '⌁', title: t('insightDeclineTitle'), copy: t('insightDeclineCopy', { percent: Math.abs(data.monthChange).toFixed(1) }) });
     if (!data.profitComplete) items.push({ warning: false, icon: '＋', title: t('insightProfitTitle'), copy: t('insightProfitCopy') });
-    if (state.skipped) items.push({ warning: true, icon: '!', title: t('insightSkippedTitle', { count: formatCount(state.skipped) }), copy: t('insightSkippedCopy') });
+    const skipped = skippedInCurrentView();
+    if (skipped) items.push({ warning: true, icon: '!', title: t('insightSkippedTitle', { count: formatCount(skipped) }), copy: t('insightSkippedCopy') });
     if (data.rows.length < 5) items.push({ warning: false, icon: 'i', title: t('insightFewTitle'), copy: t('insightFewCopy', { count: formatCount(data.rows.length) }) });
     if (!items.length) items.push({ warning: false, icon: '✓', title: t('insightClearTitle'), copy: t('insightClearCopy') });
     items.slice(0, 3).forEach((item) => { const card = document.createElement('article'); card.className = `insight-card ${item.warning ? 'warning' : ''}`; card.innerHTML = `<div><span class="insight-icon">${item.icon}</span><span class="insight-title">${escapeHTML(item.title)}</span></div><p class="insight-copy">${escapeHTML(item.copy)}</p>`; list.append(card); });
@@ -288,14 +350,16 @@
     const months = aggregate().monthly;
     $('#dataset-name').textContent = state.pendingName || (state.isDemo ? t('sampleName') : state.sourceName);
     $('#dataset-state').textContent = state.pendingName ? t('waitingConfirm') : state.isDemo ? t('demoMode') : t('localRead');
-    $('#dataset-meta').textContent = t('recordsMonths', { records: formatCount(state.records.length), skipped: state.skipped ? ` · ${t('rowSkipped', { count: formatCount(state.skipped) })}` : '', start: formatMonth(months[0]?.month || '2025-01'), end: formatMonth(months.at(-1)?.month || '2025-01') });
+    const rows = filteredRecords(); const skipped = skippedInCurrentView();
+    $('#dataset-meta').textContent = t('recordsMonths', { records: formatCount(rows.length), skipped: skipped ? ` · ${t('rowSkipped', { count: formatCount(skipped) })}` : '', start: formatMonth(months[0]?.month || '2025-01'), end: formatMonth(months.at(-1)?.month || '2025-01') });
   }
   function renderAll() {
     const data = aggregate(); renderKpis(data); renderChart(data); renderMix(data);
-    renderRanking('#product-ranking', data.products, 'rankingProductEmpty'); renderRanking('#customer-ranking', data.customers, 'rankingCustomerEmpty'); renderInsights(data); updateHeader();
+    renderRanking('#product-ranking', data.products, 'rankingProductEmpty'); renderRanking('#customer-ranking', data.customers, 'rankingCustomerEmpty'); renderInsights(data); renderDateFilter(); updateHeader();
   }
   function useDemo() {
     state.sourceName = ''; state.pendingName = ''; state.isDemo = true; state.skipped = 0;
+    state.dateFilter = { preset: 'all', start: '', end: '' };
     state.records = demoRows.map((r, i) => { const date = parseDate(r[0]); return { date, month: `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`, orderId: r[1], product: r[2], customer: r[3], quantity: r[4], revenue: r[5], cost: null, profit: r[6], sourceIndex: i }; });
     $('#mapping-panel').hidden = true; clearMessage(); renderAll();
   }
@@ -332,7 +396,7 @@
     } catch (error) { showMessage(error.message || t('errorReadFile')); }
   }
   function csvReport() {
-    const d = aggregate(); const rows = [[t('csvMetric'),t('csvValue')],[t('csvRecords'),d.rows.length],[t('csvOrders'),d.orderCount],[t('csvCustomers'),d.customerCount],[t('csvSales'),d.sales],[t('csvProfit'),d.profit ?? t('csvIncomplete')],[t('csvMargin'),d.margin == null ? t('csvIncomplete') : `${d.margin.toFixed(1)}%`],[t('csvAverage'),d.averageOrder ?? '']];
+    const d = aggregate(); const rows = [[t('csvMetric'),t('csvValue')],[t('csvPeriod'),currentFilterSummary(d.rows)],[t('csvRecords'),d.rows.length],[t('csvOrders'),d.orderCount],[t('csvCustomers'),d.customerCount],[t('csvSales'),d.sales],[t('csvProfit'),d.profit ?? t('csvIncomplete')],[t('csvMargin'),d.margin == null ? t('csvIncomplete') : `${d.margin.toFixed(1)}%`],[t('csvAverage'),d.averageOrder ?? '']];
     rows.push([],[t('csvMonth'),t('csvSales'),t('csvProfit')]); d.monthly.forEach((m) => rows.push([m.month,m.revenue,d.profitComplete ? m.profit : '']));
     rows.push([],[t('csvProducts'),t('csvSales'),t('csvQuantity')]); d.products.slice(0,10).forEach((p) => rows.push([displayEntityName(p.name),p.revenue,p.quantity]));
     rows.push([],[t('csvTopCustomers'),t('csvSales'),t('csvOrders')]); d.customers.slice(0,10).forEach((c) => rows.push([displayEntityName(c.name),c.revenue,c.orders]));
@@ -345,7 +409,7 @@
     const customers = d.customers.slice(0,10).map((c) => `<tr><td>${escapeHTML(displayEntityName(c.name))}</td><td>${escapeHTML(money(c.revenue))}</td><td>${c.orders}</td></tr>`).join('');
     const observations = [...d.outliers.map((r) => t('reportHighObservation', { date: formatDate(r.date), amount: money(r.revenue) })), ...d.refunds.map((r) => t('reportRefundObservation', { date: formatDate(r.date), amount: money(r.revenue) }))];
     const source = state.isDemo ? t('sampleName') : state.sourceName;
-    return `<!doctype html><html lang="${locale}"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHTML(t('reportHtmlTitle'))}</title><style>body{font:15px/1.7 system-ui,'Noto Sans SC',sans-serif;color:#302b3b;max-width:900px;margin:44px auto;padding:0 22px}header{border-bottom:2px solid #7555c8;padding-bottom:20px}small,.muted{color:#898391}.brand{color:#7555c8;font-weight:700;letter-spacing:1px}h1{font-size:28px;margin:9px 0}h2{font-size:18px;margin:30px 0 10px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.card{border:1px solid #eeeaf3;border-radius:10px;padding:15px}.card small{display:block}.card strong{font-size:20px}table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:9px;border-bottom:1px solid #eeeaf3}th{color:#777180}.notice{background:#f6f3fb;padding:13px;border-radius:8px;color:#625b70}@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}</style><body><header><div class="brand">CLARITY BUSINESS</div><h1>${escapeHTML(t('reportTitle'))}</h1><small>${escapeHTML(t('reportSource', { source, date, count: formatCount(d.rows.length) }))}</small></header><div class="grid"><div class="card"><small>${escapeHTML(t('reportSales'))}</small><strong>${escapeHTML(money(d.sales))}</strong></div><div class="card"><small>${escapeHTML(t('reportProfit'))}</small><strong>${d.profitComplete ? escapeHTML(money(d.profit)) : '—'}</strong></div><div class="card"><small>${escapeHTML(t('reportOrders'))}</small><strong>${formatCount(d.orderCount)}</strong></div><div class="card"><small>${escapeHTML(t('reportAverage'))}</small><strong>${escapeHTML(money(d.averageOrder))}</strong></div></div><h2>${escapeHTML(t('reportMonthly'))}</h2><table><thead><tr><th>${escapeHTML(t('reportMonth'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportProfit'))}</th></tr></thead><tbody>${rows || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportProducts'))}</h2><table><thead><tr><th>${escapeHTML(t('reportProduct'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportQuantity'))}</th></tr></thead><tbody>${products || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportCustomers'))}</h2><table><thead><tr><th>${escapeHTML(t('reportCustomer'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportOrders'))}</th></tr></thead><tbody>${customers || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportObservations'))}</h2><p>${observations.length ? observations.map(escapeHTML).join('<br>') : escapeHTML(t('reportNoAlerts'))}</p><p class="notice">${escapeHTML(t('reportNotice'))}</p><p class="muted">${escapeHTML(t('reportLocal'))}</p></body></html>`;
+    return `<!doctype html><html lang="${locale}"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHTML(t('reportHtmlTitle'))}</title><style>body{font:15px/1.7 system-ui,'Noto Sans SC',sans-serif;color:#302b3b;max-width:900px;margin:44px auto;padding:0 22px}header{border-bottom:2px solid #7555c8;padding-bottom:20px}small,.muted{color:#898391}.brand{color:#7555c8;font-weight:700;letter-spacing:1px}h1{font-size:28px;margin:9px 0}h2{font-size:18px;margin:30px 0 10px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.card{border:1px solid #eeeaf3;border-radius:10px;padding:15px}.card small{display:block}.card strong{font-size:20px}table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:9px;border-bottom:1px solid #eeeaf3}th{color:#777180}.notice{background:#f6f3fb;padding:13px;border-radius:8px;color:#625b70}@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}</style><body><header><div class="brand">CLARITY BUSINESS</div><h1>${escapeHTML(t('reportTitle'))}</h1><small>${escapeHTML(t('reportSource', { source, date, count: formatCount(d.rows.length), period: currentFilterSummary(d.rows) }))}</small></header><div class="grid"><div class="card"><small>${escapeHTML(t('reportSales'))}</small><strong>${escapeHTML(money(d.sales))}</strong></div><div class="card"><small>${escapeHTML(t('reportProfit'))}</small><strong>${d.profitComplete ? escapeHTML(money(d.profit)) : '—'}</strong></div><div class="card"><small>${escapeHTML(t('reportOrders'))}</small><strong>${formatCount(d.orderCount)}</strong></div><div class="card"><small>${escapeHTML(t('reportAverage'))}</small><strong>${escapeHTML(money(d.averageOrder))}</strong></div></div><h2>${escapeHTML(t('reportMonthly'))}</h2><table><thead><tr><th>${escapeHTML(t('reportMonth'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportProfit'))}</th></tr></thead><tbody>${rows || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportProducts'))}</h2><table><thead><tr><th>${escapeHTML(t('reportProduct'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportQuantity'))}</th></tr></thead><tbody>${products || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportCustomers'))}</h2><table><thead><tr><th>${escapeHTML(t('reportCustomer'))}</th><th>${escapeHTML(t('csvSales'))}</th><th>${escapeHTML(t('reportOrders'))}</th></tr></thead><tbody>${customers || `<tr><td colspan="3">${escapeHTML(t('reportEmpty'))}</td></tr>`}</tbody></table><h2>${escapeHTML(t('reportObservations'))}</h2><p>${observations.length ? observations.map(escapeHTML).join('<br>') : escapeHTML(t('reportNoAlerts'))}</p><p class="notice">${escapeHTML(t('reportNotice'))}</p><p class="muted">${escapeHTML(t('reportLocal'))}</p></body></html>`;
   }
   function download(content, name, type) {
     const url = URL.createObjectURL(new Blob([content], { type })); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -354,6 +418,18 @@
   $('#change-data').addEventListener('click', () => $('#file-input').click());
   $('#file-input').addEventListener('change', async (event) => { await handleFile(event.target.files?.[0]); event.target.value = ''; });
   $('#load-sample').addEventListener('click', () => { useDemo(); toast(t('toastSample')); });
+  document.querySelectorAll('[data-date-preset]').forEach((button) => button.addEventListener('click', () => {
+    state.dateFilter = { ...state.dateFilter, preset: button.dataset.datePreset };
+    clearMessage(); renderAll();
+  }));
+  $('#apply-custom-date').addEventListener('click', () => {
+    const start = $('#filter-start').value; const end = $('#filter-end').value;
+    const startDate = parseDate(start); const endDate = parseDate(end);
+    if (!startDate || !endDate) { showMessage(t('filterBothDatesRequired')); return; }
+    if (startDate > endDate) { showMessage(t('filterInvalidRange')); return; }
+    state.dateFilter = { preset: 'custom', start, end };
+    clearMessage(); renderAll(); toast(t('filterApplied'));
+  });
   $('#language-switch').addEventListener('change', (event) => {
     if (!APP_LOCALES.includes(event.target.value)) return;
     locale = event.target.value;
@@ -363,7 +439,7 @@
   });
   $('#cancel-mapping').addEventListener('click', () => { $('#mapping-panel').hidden = true; state.pendingName = ''; updateHeader(); });
   $('#analyze-button').addEventListener('click', () => {
-    try { buildRecords(); if (state.pendingName) { state.sourceName = state.pendingName; state.pendingName = ''; state.isDemo = false; } $('#mapping-panel').hidden = true; clearMessage(); renderAll(); toast(t('toastAnalyzed', { count: formatCount(state.records.length) })); }
+    try { const replacingData = Boolean(state.pendingName); buildRecords(); if (replacingData) { state.sourceName = state.pendingName; state.pendingName = ''; state.isDemo = false; state.dateFilter = { preset: 'all', start: '', end: '' }; } $('#mapping-panel').hidden = true; clearMessage(); renderAll(); toast(t('toastAnalyzed', { count: formatCount(state.records.length) })); }
     catch (error) { showMessage(error.message); }
   });
   $('#export-csv').addEventListener('click', () => download(csvReport(), 'clarity-business-summary.csv', 'text/csv;charset=utf-8'));

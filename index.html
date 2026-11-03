@@ -44,7 +44,21 @@
         <div class="mapping-footer"><span id="mapping-summary"></span><button class="button button-primary" id="analyze-button" type="button"><span data-i18n="analyzeButton">生成经营分析</span> <span>→</span></button></div>
       </section>
 
-      <section class="section-block"><div class="section-heading"><div><span class="section-kicker" data-i18n="snapshot">经营快照</span><h2 data-i18n="keyMetrics">关键指标</h2></div><span class="date-range" id="date-range"></span></div>
+      <section class="section-block"><div class="section-heading"><div><span class="section-kicker" data-i18n="snapshot">经营快照</span><h2 data-i18n="keyMetrics">关键指标</h2></div><span class="date-range" id="date-range" aria-live="polite"></span></div>
+        <div class="date-filter" id="date-filter" aria-label="日期筛选" data-i18n-aria="dateFilterLabel">
+          <div class="date-filter-presets" role="group" aria-label="快捷日期筛选" data-i18n-aria="datePresetsLabel">
+            <button class="date-filter-button active" type="button" data-date-preset="all" aria-pressed="true" data-i18n="filterAll">全部数据</button>
+            <button class="date-filter-button" type="button" data-date-preset="3m" aria-pressed="false" data-i18n="filter3Months">最近3个月</button>
+            <button class="date-filter-button" type="button" data-date-preset="6m" aria-pressed="false" data-i18n="filter6Months">最近6个月</button>
+            <button class="date-filter-button" type="button" data-date-preset="12m" aria-pressed="false" data-i18n="filter12Months">最近12个月</button>
+          </div>
+          <div class="date-filter-custom">
+            <label><span data-i18n="filterStartDate">开始日期</span><input id="filter-start" type="date"></label>
+            <span class="date-filter-separator" aria-hidden="true">—</span>
+            <label><span data-i18n="filterEndDate">结束日期</span><input id="filter-end" type="date"></label>
+            <button class="date-filter-apply" id="apply-custom-date" type="button" data-i18n="filterApply">应用</button>
+          </div>
+        </div>
         <div class="kpi-grid" id="kpi-grid"></div>
       </section>
 

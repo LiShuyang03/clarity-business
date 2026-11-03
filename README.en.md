@@ -17,7 +17,8 @@ The language switch in the top bar offers **简体中文** and **English**. Engl
 - CSV, XLSX, XLS, and XLSM files. Only worksheet data is read; macros are not run.
 - The first row must contain column names. Only the first worksheet is analyzed.
 - Date and revenue columns are required. Order ID, product, customer, quantity, cost, and profit are optional.
-- Common Chinese and English column names are detected automatically. Review or change the mapping after upload.
+- Common Chinese and English column names are detected automatically. Review or change the mapping after upload. Mapping options show a friendly bilingual field label alongside the original header; analysis continues to read from the original column position.
+- Filter by all data, the latest 3 / 6 / 12 months, or a custom start and end date. The selection updates metrics, charts, rankings, prompts, and both exports. Quick month ranges end on the latest date in the dataset.
 - Common date formats and numbers with currency signs or thousands separators are supported.
 - Files are limited to 25 MB and 200,000 rows. Rows with invalid dates or revenue are skipped and counted in the dashboard.
 
@@ -89,7 +90,7 @@ clarity-business/
 - Designed for recent versions of Chrome, Edge, Firefox, and Safari, with modern JavaScript, `Intl`, `File`, `Blob`, and download-link support.
 - Excel parsing loads only when an Excel file is selected. CSV import and the sample dashboard do not need that script.
 - Only the first Excel worksheet is read. Formula definitions, charts, pivot tables, hidden metadata, and Excel formula recalculation are not supported.
-- This is a local, single-page dashboard. It does not include accounts, collaboration, cloud saves, filters, tax calculations, or inventory management.
+- This is a local, single-page dashboard. It does not include accounts, collaboration, cloud saves, tax calculations, or inventory management.
 - Complex multi-row headers, merged cells, multiple currencies, and custom accounting rules may need to be prepared in spreadsheet software before upload.
 
 ## License

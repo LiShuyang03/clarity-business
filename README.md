@@ -44,6 +44,12 @@ CSV 由本地 JavaScript 读取和分析。上传 Excel 文件时，应用会按
 - **下载分析报告**：生成独立 HTML 报告，含关键指标、月度汇总、商品 / 客户排名和规则提示，可在浏览器打开或打印为 PDF。
 - **导出汇总 CSV**：导出关键指标、月度销售额 / 利润和前十商品 / 客户汇总。
 
+## 语言与后续扩展
+
+页面顶部提供简体中文和 English 切换。当前仅开放这两种已完成的语言；西班牙语、俄语、法语、德语和日语尚未加入可选列表，也不会显示机器翻译或未完成内容。切换语言会同步更新看板、图表、导入提示和下载报告 / CSV 的列标题；用户上传的商品名、客户名和文件名保留原样。示例商品和客户名会随界面语言显示对应译文。
+
+翻译集中在 `locales.js`。增加语言时，为 `window.CLARITY_LOCALES` 添加完整目录，覆盖页面文案、错误和状态、报告 / CSV 文案、字段匹配别名、示例商品 / 客户名、日期格式单位；然后将该语言代码加入 `APP_LOCALES`。只有完整翻译并核对所有界面和导出内容后，才把语言加入可选列表。语言列表刻意与翻译目录分开控制，避免未完成语言提前发布。英语帮助文档为 `README.en.md`。
+
 ## 部署到 GitHub Pages
 
 1. 在 GitHub 登录后点击右上角 **+ → New repository**，创建一个新仓库（例如 `clarity-business`）。是否公开由你决定。
@@ -52,7 +58,7 @@ CSV 由本地 JavaScript 读取和分析。上传 Excel 文件时，应用会按
 4. 在 **Build and deployment** 下将来源设为 **Deploy from a branch**，选择 `main` 分支和 `/(root)` 文件夹，点击 **Save**。
 5. 等待 Pages 部署完成，GitHub 会在 Pages 设置区域显示网址。项目通常可通过 `https://你的用户名.github.io/仓库名/` 访问。
 
-更新网页时，将修改后的文件再次提交到 `main`。首次发布和后续部署可能需要几分钟生效。GitHub Pages 网站会公开显示在互联网上，即使仓库本身设为私有也可能如此；不要把客户数据、账号凭据或私人销售表格提交到仓库。完整的发布源设置说明见 [GitHub Pages 官方文档](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
+更新网页时，将修改后的文件再次提交到 `main`。可在 GitHub 仓库页面打开 **Add file → Upload files** 上传更新文件并提交，也可以在已有 Git 仓库中运行 `git add .`、`git commit -m "Add Chinese and English localization"` 和 `git push origin main`。首次发布和后续部署可能需要几分钟生效。GitHub Pages 网站会公开显示在互联网上，即使仓库本身设为私有也可能如此；不要把客户数据、账号凭据或私人销售表格提交到仓库。完整的发布源设置说明见 [GitHub Pages 官方文档](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
 
 ## 文件结构
 
@@ -60,9 +66,11 @@ CSV 由本地 JavaScript 读取和分析。上传 Excel 文件时，应用会按
 clarity-business/
 ├── index.html
 ├── app.js
+├── locales.js
 ├── styles.css
 ├── sample-sales.csv
 ├── README.md
+├── README.en.md
 ├── LICENSE
 ├── SOURCE-ATTRIBUTION.md
 └── THIRD-PARTY-NOTICES.md

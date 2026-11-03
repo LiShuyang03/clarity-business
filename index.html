@@ -4,67 +4,68 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f5fb">
-  <meta name="description" content="Clarity Business：在浏览器本地查看销售趋势、产品与客户表现的轻量经营分析工具。">
-  <title>Clarity Business — 经营分析</title>
+  <meta name="description" content="Clarity Business：在浏览器本地查看销售趋势、产品与客户表现的轻量经营分析工具。" data-i18n-content="metaDescription">
+  <title data-i18n-title="documentTitle">Clarity Business — 经营分析</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar" aria-label="主导航">
-      <a class="brand" href="#top" aria-label="Clarity Business 首页">
+    <aside class="sidebar" aria-label="主导航" data-i18n-aria="mainNavigation">
+      <a class="brand" href="#top" aria-label="Clarity Business 首页" data-i18n-aria="brandHome">
         <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
         <span class="brand-copy"><strong>clarity</strong><small>BUSINESS</small></span>
       </a>
-      <div class="workspace-label">工作空间</div>
-      <div class="workspace-switch"><span class="workspace-avatar">C</span><span><strong>我的生意</strong><small>个人工作区</small></span><span class="chevron">⌄</span></div>
+      <div class="workspace-label" data-i18n="workspace">工作空间</div>
+      <div class="workspace-switch"><span class="workspace-avatar">C</span><span><strong data-i18n="myBusiness">我的生意</strong><small data-i18n="personalWorkspace">个人工作区</small></span><span class="chevron">⌄</span></div>
       <nav class="nav-list">
-        <a class="nav-item active" href="#overview"><span class="nav-icon">▦</span>经营总览</a>
-        <a class="nav-item" href="#trends"><span class="nav-icon">⌁</span>销售趋势</a>
-        <a class="nav-item" href="#rankings"><span class="nav-icon">◫</span>商品与客户</a>
-        <a class="nav-item" href="#insights"><span class="nav-icon">✳</span>经营提示</a>
+        <a class="nav-item active" href="#overview"><span class="nav-icon">▦</span><span data-i18n="navOverview">经营总览</span></a>
+        <a class="nav-item" href="#trends"><span class="nav-icon">⌁</span><span data-i18n="navTrends">销售趋势</span></a>
+        <a class="nav-item" href="#rankings"><span class="nav-icon">◫</span><span data-i18n="navRankings">商品与客户</span></a>
+        <a class="nav-item" href="#insights"><span class="nav-icon">✳</span><span data-i18n="navInsights">经营提示</span></a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="privacy-card"><span class="privacy-icon">◉</span><strong>数据留在你的设备</strong><p>分析在当前浏览器中完成。文件不会上传到服务器。</p></div>
-        <div class="profile"><span class="profile-avatar">林</span><span><strong>本地访客</strong><small>仅此设备可见</small></span></div>
+        <div class="privacy-card"><span class="privacy-icon">◉</span><strong data-i18n="privacyTitle">数据留在你的设备</strong><p data-i18n="privacyCopy">分析在当前浏览器中完成。文件不会上传到服务器。</p></div>
+        <div class="profile"><span class="profile-avatar" data-i18n="profileAvatar">林</span><span><strong data-i18n="localVisitor">本地访客</strong><small data-i18n="thisDeviceOnly">仅此设备可见</small></span></div>
       </div>
     </aside>
 
     <main class="main-content" id="top">
-      <header class="topbar"><div class="breadcrumb">工作空间 <span>/</span> <strong>经营总览</strong></div><div class="top-actions"><span class="local-badge"><i></i>本地分析</span><a class="icon-button help-link" href="README.md" aria-label="查看使用说明">?</a></div></header>
+      <header class="topbar"><div class="breadcrumb"><span data-i18n="workspace">工作空间</span> <span>/</span> <strong data-i18n="navOverview">经营总览</strong></div><div class="top-actions"><span class="local-badge"><i></i><span data-i18n="localAnalysis">本地分析</span></span><a class="icon-button help-link" href="README.md" aria-label="查看使用说明" data-i18n-aria="help" data-i18n-href="helpDocument">?</a><label class="language-control"><span data-i18n="languageLabel">语言</span><select id="language-switch" aria-label="选择语言" data-i18n-aria="chooseLanguage"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label></div></header>
       <section class="page-intro" id="overview">
-        <div><div class="eyebrow"><span class="sparkle">✳</span> 让经营数据更清晰</div><h1>欢迎回来</h1><p class="intro-subtitle">把销售表格变成下一步行动的线索。</p></div>
-        <div class="intro-actions"><button class="button button-quiet" id="load-sample" type="button"><span>◷</span> 查看示例数据</button><button class="button button-primary" id="upload-trigger" type="button"><span>↑</span> 上传销售数据</button><input id="file-input" type="file" accept=".csv,.xlsx,.xls,.xlsm" hidden></div>
+        <div><div class="eyebrow"><span class="sparkle">✳</span><span data-i18n="eyebrow">让经营数据更清晰</span></div><h1 data-i18n="welcome">欢迎回来</h1><p class="intro-subtitle" data-i18n="introSubtitle">把销售表格变成下一步行动的线索。</p></div>
+        <div class="intro-actions"><button class="button button-quiet" id="load-sample" type="button"><span>◷</span><span data-i18n="sampleButton">查看示例数据</span></button><button class="button button-primary" id="upload-trigger" type="button"><span>↑</span><span data-i18n="uploadButton">上传销售数据</span></button><input id="file-input" type="file" accept=".csv,.xlsx,.xls,.xlsm" hidden></div>
       </section>
 
-      <section class="file-strip" aria-live="polite"><div class="file-icon">▤</div><div class="file-meta"><strong id="dataset-name">示例销售数据</strong><span id="dataset-meta">16 条记录 · 2025年1月 — 2025年6月</span></div><span class="file-state"><i></i><span id="dataset-state">演示模式</span></span><button class="text-button" id="change-data" type="button">更换数据</button></section>
+      <section class="file-strip" aria-live="polite"><div class="file-icon">▤</div><div class="file-meta"><strong id="dataset-name">示例销售数据</strong><span id="dataset-meta"></span></div><span class="file-state"><i></i><span id="dataset-state">演示模式</span></span><button class="text-button" id="change-data" type="button" data-i18n="changeData">更换数据</button></section>
       <div id="status-message" class="status-message" role="status" hidden></div>
       <section class="mapping-panel" id="mapping-panel" hidden aria-labelledby="mapping-title">
-        <div class="mapping-head"><div><span class="section-kicker">导入设置</span><h2 id="mapping-title">确认列对应关系</h2><p>我们根据列名做了初步判断，请检查后再生成分析。</p></div><button class="icon-button" id="cancel-mapping" type="button" aria-label="关闭">×</button></div>
+        <div class="mapping-head"><div><span class="section-kicker" data-i18n="importSettings">导入设置</span><h2 id="mapping-title" data-i18n="mappingTitle">确认列对应关系</h2><p data-i18n="mappingCopy">我们根据列名做了初步判断，请检查后再生成分析。</p></div><button class="icon-button" id="cancel-mapping" type="button" aria-label="关闭" data-i18n-aria="close">×</button></div>
         <div class="mapping-grid" id="mapping-grid"></div>
-        <div class="mapping-footer"><span id="mapping-summary">已读取 0 条记录</span><button class="button button-primary" id="analyze-button" type="button">生成经营分析 <span>→</span></button></div>
+        <div class="mapping-footer"><span id="mapping-summary"></span><button class="button button-primary" id="analyze-button" type="button"><span data-i18n="analyzeButton">生成经营分析</span> <span>→</span></button></div>
       </section>
 
-      <section class="section-block"><div class="section-heading"><div><span class="section-kicker">经营快照</span><h2>关键指标</h2></div><span class="date-range" id="date-range">最近 6 个月 <span>⌄</span></span></div>
+      <section class="section-block"><div class="section-heading"><div><span class="section-kicker" data-i18n="snapshot">经营快照</span><h2 data-i18n="keyMetrics">关键指标</h2></div><span class="date-range" id="date-range"></span></div>
         <div class="kpi-grid" id="kpi-grid"></div>
       </section>
 
       <section class="content-grid" id="trends">
-        <article class="panel trend-panel"><div class="panel-heading"><div><span class="section-kicker">收入表现</span><h2>销售趋势</h2></div><div class="chart-legend"><span><i class="legend-revenue"></i>销售额</span><span id="profit-legend"><i class="legend-profit"></i>利润</span></div></div><div class="chart-summary" id="trend-summary"></div><div class="chart-wrap" id="trend-chart" role="img" aria-label="按月销售趋势图"></div><div class="panel-footnote" id="trend-note"></div></article>
-        <article class="panel mix-panel"><div class="panel-heading"><div><span class="section-kicker">收入结构</span><h2>销售额来自哪里</h2></div></div><div id="mix-content"></div></article>
+        <article class="panel trend-panel"><div class="panel-heading"><div><span class="section-kicker" data-i18n="revenuePerformance">收入表现</span><h2 data-i18n="salesTrend">销售趋势</h2></div><div class="chart-legend"><span><i class="legend-revenue"></i><span data-i18n="revenue">销售额</span></span><span id="profit-legend"><i class="legend-profit"></i><span data-i18n="profit">利润</span></span></div></div><div class="chart-summary" id="trend-summary"></div><div class="chart-wrap" id="trend-chart" role="img" aria-label="按月销售趋势图"></div><div class="panel-footnote" id="trend-note"></div></article>
+        <article class="panel mix-panel"><div class="panel-heading"><div><span class="section-kicker" data-i18n="revenueMix">收入结构</span><h2 data-i18n="revenueSources">销售额来自哪里</h2></div></div><div id="mix-content"></div></article>
       </section>
 
       <section class="content-grid ranking-grid" id="rankings">
-        <article class="panel ranking-panel"><div class="panel-heading"><div><span class="section-kicker">商品表现</span><h2>热销商品</h2></div><span class="subtle-label">按销售额排序</span></div><div id="product-ranking"></div></article>
-        <article class="panel ranking-panel"><div class="panel-heading"><div><span class="section-kicker">客户价值</span><h2>重点客户</h2></div><span class="subtle-label">按销售额排序</span></div><div id="customer-ranking"></div></article>
+        <article class="panel ranking-panel"><div class="panel-heading"><div><span class="section-kicker" data-i18n="productPerformance">商品表现</span><h2 data-i18n="topProducts">热销商品</h2></div><span class="subtle-label" data-i18n="sortedByRevenue">按销售额排序</span></div><div id="product-ranking"></div></article>
+        <article class="panel ranking-panel"><div class="panel-heading"><div><span class="section-kicker" data-i18n="customerValue">客户价值</span><h2 data-i18n="topCustomers">重点客户</h2></div><span class="subtle-label" data-i18n="sortedByRevenue">按销售额排序</span></div><div id="customer-ranking"></div></article>
       </section>
 
-      <section class="panel insights-panel" id="insights"><div class="panel-heading"><div><span class="section-kicker">数据观察</span><h2>值得留意</h2></div><span class="rule-tag"><i></i>规则分析</span></div><div id="insights-list" class="insights-list"></div><p class="caution-note">这些提示依据当前表格中的简单统计规则生成，仅用于辅助检查，不能单独作为经营结论。</p></section>
+      <section class="panel insights-panel" id="insights"><div class="panel-heading"><div><span class="section-kicker" data-i18n="dataObservations">数据观察</span><h2 data-i18n="worthNoting">值得留意</h2></div><span class="rule-tag"><i></i><span data-i18n="ruleAnalysis">规则分析</span></span></div><div id="insights-list" class="insights-list"></div><p class="caution-note" data-i18n="cautionNote">这些提示依据当前表格中的简单统计规则生成，仅用于辅助检查，不能单独作为经营结论。</p></section>
 
-      <section class="report-bar"><div class="report-symbol">↗</div><div><strong>把分析结果带走</strong><p>生成一份可分享的经营分析报告，或导出汇总数据。</p></div><div class="report-actions"><button class="button button-quiet" id="export-csv" type="button">↓ 导出汇总 CSV</button><button class="button button-primary" id="download-report" type="button">↓ 下载分析报告</button></div></section>
-      <footer class="app-footer"><span>Clarity Business <span>·</span> 轻量经营分析</span><span>数据仅在本地浏览器处理 <span>·</span> <a href="README.md">了解分析方式</a></span></footer>
+      <section class="report-bar"><div class="report-symbol">↗</div><div><strong data-i18n="takeAnalysis">把分析结果带走</strong><p data-i18n="takeAnalysisCopy">生成一份可分享的经营分析报告，或导出汇总数据。</p></div><div class="report-actions"><button class="button button-quiet" id="export-csv" type="button" data-i18n="exportCsv">↓ 导出汇总 CSV</button><button class="button button-primary" id="download-report" type="button" data-i18n="downloadReport">↓ 下载分析报告</button></div></section>
+      <footer class="app-footer"><span>Clarity Business <span>·</span> <span data-i18n="footerTagline">轻量经营分析</span></span><span><span data-i18n="localProcessing">数据仅在本地浏览器处理</span> <span>·</span> <a href="README.md" data-i18n="analysisInfo" data-i18n-href="helpDocument">了解分析方式</a></span></footer>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="locales.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
